@@ -2,6 +2,7 @@
 package application
 
 import (
+	"errors"
 	repositories "github.com/vicpoo/ApiPolarpets/src/usuarios/domain"
 	"github.com/vicpoo/ApiPolarpets/src/usuarios/domain/entities"
 )
@@ -15,7 +16,19 @@ func NewRegisterUseCase(repo repositories.IUsuario) *RegisterUseCase {
 }
 
 func (uc *RegisterUseCase) Run(usuario *entities.Usuario) (*entities.Usuario, error) {
-	err := uc.repo.Register(usuario)
+	// Verificar si el email ya existe
+	existingUser, _ := uc.repo.GetByEmail(usuario.GetEmail())
+	if existingUser != nil {
+		return nil, errors.New("el email ya está registrado")
+	}
+
+	// Hashear la contraseña
+	err := usuario.HashPassword()
+	if err != nil {
+		return nil, errors.New("error al procesar la contraseña")
+	}
+
+	err = uc.repo.Register(usuario)
 	if err != nil {
 		return nil, err
 	}

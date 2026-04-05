@@ -1,11 +1,15 @@
 // usuario.go
 package entities
 
+import (
+	"golang.org/x/crypto/bcrypt"
+)
+
 type Usuario struct {
 	IDUsuario       int32  `json:"id_usuario" gorm:"column:id_usuario;primaryKey;autoIncrement"`
 	Username        string `json:"username" gorm:"column:username"`
 	Email           string `json:"email" gorm:"column:email;unique"`
-	Password        string `json:"password" gorm:"column:password"`
+	Password        string `json:"password,omitempty" gorm:"column:password"`
 	IDRol           int32  `json:"id_rol" gorm:"column:id_rol"`
 	IDMascotaActiva *int32 `json:"id_mascota_activa,omitempty" gorm:"column:id_mascota_activa"`
 }
@@ -58,6 +62,22 @@ func (u *Usuario) GetIDRol() int32 {
 
 func (u *Usuario) GetIDMascotaActiva() *int32 {
 	return u.IDMascotaActiva
+}
+
+// HashPassword hashea la contraseña del usuario
+func (u *Usuario) HashPassword() error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.Password = string(hashedPassword)
+	return nil
+}
+
+// CheckPassword verifica si la contraseña proporcionada coincide con el hash
+func (u *Usuario) CheckPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	return err == nil
 }
 
 // Constructor

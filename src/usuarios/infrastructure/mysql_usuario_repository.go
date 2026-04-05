@@ -48,14 +48,14 @@ func (mysql *MySQLUsuarioRepository) Register(usuario *entities.Usuario) error {
 	return nil
 }
 
-// Login - Autenticar usuario por email y password
+// Login - Autenticar usuario por email y password (solo retorna el usuario)
 func (mysql *MySQLUsuarioRepository) Login(email, password string) (*entities.Usuario, error) {
 	query := `
 		SELECT id_usuario, username, email, password, id_rol, id_mascota_activa
 		FROM usuarios
-		WHERE email = ? AND password = ?
+		WHERE email = ?
 	`
-	row := mysql.conn.QueryRow(query, email, password)
+	row := mysql.conn.QueryRow(query, email)
 
 	var usuario entities.Usuario
 	var idUsuario int32
@@ -84,6 +84,11 @@ func (mysql *MySQLUsuarioRepository) Login(email, password string) (*entities.Us
 		usuario.SetIDMascotaActiva(&idMascotaActiva.Int32)
 	} else {
 		usuario.SetIDMascotaActiva(nil)
+	}
+
+	// Verificar contraseña
+	if !usuario.CheckPassword(password) {
+		return nil, fmt.Errorf("credenciales inválidas")
 	}
 
 	return &usuario, nil
@@ -201,7 +206,7 @@ func (mysql *MySQLUsuarioRepository) GetById(id int32) (*entities.Usuario, error
 	usuario.SetIDUsuario(idUsuario)
 	usuario.SetUsername(username)
 	usuario.SetEmail(email)
-	usuario.SetPassword(password)
+	usuario.SetPassword("") // Limpiar contraseña
 	usuario.SetIDRol(idRol)
 	
 	if idMascotaActiva.Valid {
@@ -245,7 +250,7 @@ func (mysql *MySQLUsuarioRepository) GetAll() ([]entities.Usuario, error) {
 		usuario.SetIDUsuario(idUsuario)
 		usuario.SetUsername(username)
 		usuario.SetEmail(email)
-		usuario.SetPassword(password)
+		usuario.SetPassword("") // Limpiar contraseña
 		usuario.SetIDRol(idRol)
 		
 		if idMascotaActiva.Valid {
@@ -294,7 +299,7 @@ func (mysql *MySQLUsuarioRepository) GetByEmail(email string) (*entities.Usuario
 	usuario.SetIDUsuario(idUsuario)
 	usuario.SetUsername(username)
 	usuario.SetEmail(userEmail)
-	usuario.SetPassword(password)
+	usuario.SetPassword("") // Limpiar contraseña
 	usuario.SetIDRol(idRol)
 	
 	if idMascotaActiva.Valid {

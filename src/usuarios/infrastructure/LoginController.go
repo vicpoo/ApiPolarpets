@@ -32,7 +32,7 @@ func (ctrl *LoginController) Run(c *gin.Context) {
 		return
 	}
 
-	usuario, err := ctrl.loginUseCase.Run(loginRequest.Email, loginRequest.Password)
+	response, err := ctrl.loginUseCase.Run(loginRequest.Email, loginRequest.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Credenciales inválidas",
@@ -41,5 +41,8 @@ func (ctrl *LoginController) Run(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, usuario)
+	c.JSON(http.StatusOK, gin.H{
+		"token":   response.Token,
+		"usuario": response.Usuario,
+	})
 }

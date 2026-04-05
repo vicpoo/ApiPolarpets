@@ -15,7 +15,21 @@ func NewUpdateUsuarioUseCase(repo repositories.IUsuario) *UpdateUsuarioUseCase {
 }
 
 func (uc *UpdateUsuarioUseCase) Run(usuario *entities.Usuario) (*entities.Usuario, error) {
-	err := uc.repo.Update(usuario)
+	// Obtener usuario actual para verificar si la contraseña cambió
+	existingUser, err := uc.repo.GetById(usuario.GetIDUsuario())
+	if err != nil {
+		return nil, err
+	}
+
+	// Si la contraseña es diferente a la almacenada, hashearla
+	if usuario.GetPassword() != existingUser.GetPassword() {
+		err := usuario.HashPassword()
+		if err != nil {
+			return nil, err
+		}
+	}
+	
+	err = uc.repo.Update(usuario)
 	if err != nil {
 		return nil, err
 	}

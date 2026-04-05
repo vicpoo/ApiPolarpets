@@ -15,7 +15,13 @@ func NewCreateUsuarioUseCase(repo repositories.IUsuario) *CreateUsuarioUseCase {
 }
 
 func (uc *CreateUsuarioUseCase) Run(usuario *entities.Usuario) (*entities.Usuario, error) {
-	err := uc.repo.Save(usuario)
+	// Hashear la contraseña
+	err := usuario.HashPassword()
+	if err != nil {
+		return nil, err
+	}
+	
+	err = uc.repo.Save(usuario)
 	if err != nil {
 		return nil, err
 	}
